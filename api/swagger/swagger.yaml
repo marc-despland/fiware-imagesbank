@@ -1,0 +1,276 @@
+swagger: "2.0"
+info:
+  version: "1.1.0"
+  title: Images Bank API
+# basePath prefixes all resource paths 
+basePath: /api
+tags:
+  - name: Fiware
+    description: Fiware compatibles API
+  - name: Image
+    description: Images management functions
+schemes:
+  # tip: remove http to make production-grade
+  - http
+  - https
+# format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# format of the responses to the client (Accepts)
+produces:
+  - application/json
+paths:
+
+##########################################################################################
+##          Fiware Compatibles API
+##
+  /v2/entities/{entityid}/attrs/{attribute}/image:
+    x-swagger-router-controller: fiwareimages
+    get:
+      tags:
+        - Fiware
+      description: Return the last image for the given entity/attribute
+      operationId: getFiwareImage
+      parameters:
+        - name: entityid
+          in: path
+          description: The Id of the entity 
+          required: true
+          type: string
+        - name: attribute
+          in: path
+          description: The Id of the attribute
+          required: true
+          type: string
+      responses:
+        "200":
+          description: The image
+          schema:
+            type: file
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/FiwareErrorResponse"
+
+##########################################################################################
+##          Images management
+##
+  /collections:
+    x-swagger-router-controller: images
+    get:
+      tags:
+        - Image
+      description: List existing collections
+      operationId: listCollections
+      responses:
+        "200":
+          description: Collections list
+          schema:
+            type: array
+            items:
+              type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /collections/{collection}:
+    x-swagger-router-controller: images
+    delete:
+      tags:
+        - Image
+      description: Delete a collection and its images
+      operationId: deleteCollection
+      parameters:
+        - name: collection
+          in: path
+          description: The collection to upload the image in
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Deleted
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /collections/{collection}/images:
+    x-swagger-router-controller: images
+    post:
+      tags:
+        - Image
+      description: Upload an image
+      operationId: uploadImage
+      consumes:
+         - multipart/form-data
+      parameters:
+        - name: collection
+          in: path
+          description: The collection to upload the image in
+          required: true
+          type: string
+        - in: formData
+          name: image
+          type: file
+          required: true
+          description: The image to upload.
+      responses:
+        "201":
+          description: Created
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/Image"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    get:
+      tags:
+        - Image
+      description: return the list of images in the collection
+      operationId: listImages
+      parameters:
+        - name: collection
+          in: path
+          description: The collection name
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+          schema:
+            # a pointer to a definition
+            $ref: "#/definitions/Images"
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /collections/{collection}/images/{imageid}:
+    x-swagger-router-controller: images
+    get:
+      tags:
+        - Image
+      description: download an image
+      operationId: downloadImage
+      produces:
+        - image/jpeg
+      parameters:
+        - name: collection
+          in: path
+          description: The collection to upload the image in
+          required: true
+          type: string
+        - name: imageid
+          in: path
+          description: The id of the image to download
+          required: true
+          type: string
+      responses:
+        "200":
+          description: The image
+          schema:
+            type: file
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    delete:
+      tags:
+        - Image
+      description: Delete the image
+      operationId: deleteImage
+      parameters:
+        - name: collection
+          in: path
+          description: The collection to upload the image in
+          required: true
+          type: string
+        - name: imageid
+          in: path
+          description: The id of the image to delete
+          required: true
+          type: string
+      responses:
+        "200":
+          description: Success
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+  /collections/{collection}/images/{imageid}/thumbnail:
+    x-swagger-router-controller: images
+    get:
+      tags:
+        - Image
+      description: download a thumbnail of an image
+      operationId: downloadThumbnailImage
+      produces:
+        - image/jpeg
+      parameters:
+        - name: collection
+          in: path
+          description: The collection to upload the image in
+          required: true
+          type: string
+        - name: imageid
+          in: path
+          description: The id of the image to download
+          required: true
+          type: string
+        - name: width
+          in: query
+          description: The width of the thumbnail
+          required: false
+          type: integer
+      responses:
+        "200":
+          description: The image
+          schema:
+            type: file
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+
+  /swagger:
+    x-swagger-pipe: swagger_raw
+# complex objects have schema definitions
+definitions:
+  Images:
+    type: array
+    items:
+      $ref: "#/definitions/Image"
+  Image:
+    properties:
+      imageid:
+        type: string
+      length:
+        type: integer
+      contentType:
+        type: string
+      filename:
+        type: string
+      md5:
+        type: string
+      uploadDate:
+        type: string
+        format: date-time
+  ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+  FiwareErrorResponse:
+    properties:
+      error:
+        type: string
+      description:
+        type: string
