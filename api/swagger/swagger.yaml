@@ -24,7 +24,7 @@ paths:
 ##########################################################################################
 ##          Fiware Compatibles API
 ##
-  /v2/entities/{entityid}/attrs/{attribute}/image:
+  /v2/entities/{entity}/attrs/{attribute}/image:
     x-swagger-router-controller: fiwareimages
     get:
       tags:
@@ -32,7 +32,7 @@ paths:
       description: Return the last image for the given entity/attribute
       operationId: getFiwareImage
       parameters:
-        - name: entityid
+        - name: entity
           in: path
           description: The Id of the entity 
           required: true
@@ -47,6 +47,39 @@ paths:
           description: The image
           schema:
             type: file
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/FiwareErrorResponse"
+    put:
+      tags:
+        - Fiware
+      description: Upload an image for the given entity/attribute
+      operationId: uploadFiwareImage
+      consumes:
+         - multipart/form-data
+      parameters:
+        - name: entity
+          in: path
+          description: The Id of the entity 
+          required: true
+          type: string
+        - name: attribute
+          in: path
+          description: The Id of the attribute
+          required: true
+          type: string
+        - in: formData
+          name: image
+          type: file
+          required: true
+          description: The image to upload.
+      responses:
+        "200":
+          description: The image id
+          schema:
+             $ref: "#/definitions/Image"
         # responses may fall through to errors
         default:
           description: Error
